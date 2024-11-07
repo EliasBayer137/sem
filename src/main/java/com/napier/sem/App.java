@@ -17,7 +17,6 @@ public class App {
         Department dept = a.getDepartment("Development");
         ArrayList<Employee> employees = a.getSalariesByDepartment(dept);
 
-
         // Print salary report
         a.printSalaries(employees);
 
@@ -90,10 +89,16 @@ public class App {
             Statement stmt = con.createStatement();
             // Create string for SQL statement
             String strSelect =
-                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary "
-                            + "FROM employees, salaries "
-                            + "WHERE employees.emp_no = salaries.emp_no AND salaries.to_date = '9999-01-01' "
-                            + "ORDER BY employees.emp_no ASC ";
+                    "SELECT e.emp_no, e.first_name, e.last_name, s.salary, d.dept_name, t.title, "
+                            + "m.first_name AS manager_first_name, m.last_name AS manager_last_name "
+                            + "FROM employees e "
+                            + "JOIN salaries s ON e.emp_no = s.emp_no "
+                            + "JOIN dept_emp de ON e.emp_no = de.emp_no "
+                            + "JOIN departments d ON de.dept_no = d.dept_no "
+                            + "JOIN titles t ON e.emp_no = t.emp_no "
+                            + "LEFT JOIN dept_manager dm ON de.dept_no = dm.dept_no "  // Verbindung der Abteilung mit dem Manager
+                            + "LEFT JOIN employees m ON dm.emp_no = m.emp_no "  // Hier holen wir die Managerdaten
+                            + "WHERE e.emp_no = " + ID + " AND s.to_date = '9999-01-01' AND t.to_date = '9999-01-01'";
 
 
             // Execute SQL statement
@@ -105,9 +110,13 @@ public class App {
                 emp.emp_no = rset.getInt("emp_no");
                 emp.first_name = rset.getString("first_name");
                 emp.last_name = rset.getString("last_name");
+                emp.salary = rset.getInt("salary");
+                emp.dept_name = rset.getString("dept_name");
+                emp.title = rset.getString("title");
                 return emp;
             } else
                 return null;
+
         } catch (Exception e) {
             System.out.println(e.getMessage());
             System.out.println("Failed to get employee details");
